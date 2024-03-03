@@ -1,7 +1,7 @@
-import React, { createContext, useContext } from "react";
-import IUser from "../../types/IUser";
+import React from "react";
+import { IUser } from "../types/IUser";
 
-import { FIREBASE_AUTH, FIREBASE_DB } from "../../../config";
+import { FIREBASE_AUTH, FIREBASE_DB } from "../../config";
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, UserCredential, onAuthStateChanged } from "firebase/auth";
 import { DocumentData, DocumentReference, doc, getDoc, setDoc } from "firebase/firestore";
 
@@ -18,13 +18,13 @@ interface ISessionContext {
     signOut: () => void;
 }
 
-interface ISessionProvider {
+interface ISessionProps {
     children: React.ReactNode;
 };
 
-export const SessionContext = createContext<ISessionContext | null>(null);
+export const SessionContext = React.createContext<ISessionContext | null>(null);
 
-export const SessionProvider: React.FC<ISessionProvider> = ({ children }: ISessionProvider) => {
+export const SessionProvider: React.FC<ISessionProps> = ({ children }: ISessionProps) => {
 
     const [session, setSession] = React.useState<IUser | null>(null)
     const [isLoading, setIsLoading] = React.useState<boolean>(false);
@@ -100,8 +100,8 @@ export const SessionProvider: React.FC<ISessionProvider> = ({ children }: ISessi
     );
 };
 
-export const useSession = () => {
-    const context = useContext(SessionContext);
+export const useSession = (): ISessionContext => {
+    const context = React.useContext(SessionContext);
     if (!context) {
         throw new Error('useSession doit être utilisé à l\'intérieur d\'un SessionProvider');
     }

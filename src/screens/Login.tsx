@@ -1,9 +1,9 @@
-import React, { useState } from "react";
+import React from "react";
 import { View, StyleSheet, ActivityIndicator, KeyboardAvoidingView } from "react-native";
 
 import TextInputApp from "../components/TextInputApp/TextInputApp";
 import TouchableOpacityApp from "../components/TouchableOpacityApp/TouchableOpacityApp";
-import { IDataAuth, useSession } from "../contexts/Session/Session";
+import { IDataAuth, useSession } from "../contexts/Session";
 
 const Login = () => {
     const { signIn, signUp, isLoading } = useSession();

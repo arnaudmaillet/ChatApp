@@ -3,7 +3,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React from 'react';
 
 import { Button } from 'react-native';
-import { useSession } from '../../contexts/Session/Session';
+import { useSession } from '../../contexts/Session';
 import Chat from '../../screens/Chat';
 import Login from '../../screens/Login';
 import Home from '../../screens/Home';
