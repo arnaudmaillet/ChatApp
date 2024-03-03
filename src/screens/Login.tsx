@@ -1,73 +1,44 @@
 import React, { useState } from "react";
-import { View, StyleSheet, TextInput, ActivityIndicator, Button, KeyboardAvoidingView } from "react-native";
+import { View, StyleSheet, ActivityIndicator, KeyboardAvoidingView } from "react-native";
 
-import { FIREBASE_AUTH } from "../../config"
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
+import TextInputApp from "../components/TextInputApp/TextInputApp";
+import TouchableOpacityApp from "../components/TouchableOpacityApp/TouchableOpacityApp";
+import { IDataAuth, useSession } from "../contexts/Session/Session";
 
 const Login = () => {
-
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [loading, setLoading] = useState(false);
-    const auth = FIREBASE_AUTH;
-
-    const signIn = async () => {
-        setLoading(true);
-        try {
-            const response = await signInWithEmailAndPassword(auth, email, password);
-            console.log(response);
-        } catch (error: any) {
-            console.log(error);
-            alert("Sign in failed : " + error.message);
-        } finally {
-            setLoading(false);
-        }
-    }
-
-    const signUp = async () => {
-        setLoading(true);
-        try {
-            const response = await createUserWithEmailAndPassword(auth, email, password);
-            console.log(response);
-            alert("Sign up successful");
-        } catch (error: any) {
-            console.log(error);
-            alert("Sign in failed : " + error.message);
-        } finally {
-            setLoading(false);
-        }
-    }
+    const { signIn, signUp, isLoading } = useSession();
+    const [dataAuth, setDataAuth] = React.useState<IDataAuth>({ email: '', password: '' });
 
     return (
         <View style={styles.container}>
             <KeyboardAvoidingView behavior="padding">
-                <TextInput 
+                <TextInputApp
                     style={styles.input}
                     placeholder="Email"
-                    value={email}
+                    value={dataAuth.email}
                     autoCapitalize="none"
-                    onChangeText={(text) => setEmail(text)}
-                ></TextInput>
-                <TextInput 
+                    onChangeText={(text) => setDataAuth({ ...dataAuth, email: text })}
+                ></TextInputApp>
+                <TextInputApp
                     style={styles.input}
                     placeholder="Password"
-                    value={password}
+                    value={dataAuth.password}
                     autoCapitalize="none"
-                    onChangeText={(text) => setPassword(text)}
+                    onChangeText={(text) => setDataAuth({ ...dataAuth, password: text })}
                     secureTextEntry={true}
-                ></TextInput>
+                ></TextInputApp>
 
-                {loading ? (
+                {isLoading ? (
                     <ActivityIndicator size="large" color="#0000ff" />
                 ) : (
                     <>
-                        <Button
-                            title="Login"
-                            onPress={signIn}
+                        <TouchableOpacityApp
+                            text="Login"
+                            onPress={() => signIn(dataAuth)}
                         />
-                        <Button
-                            title="Create account"
-                            onPress={signUp}
+                        <TouchableOpacityApp
+                            text="Create account"
+                            onPress={() => signUp(dataAuth)}
                         />
                     </>
                 )}
