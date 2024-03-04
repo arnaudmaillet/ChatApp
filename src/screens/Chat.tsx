@@ -26,7 +26,7 @@ const Chat: React.FC<IChatProps> = ({ route }: IChatProps) => {
     const [newMessage, setNewMessage] = React.useState<string>('');
 
     const onSend = () => {
-        sendData(uid, newMessage);
+        sendData(uid, newMessage, messagesView);
         setNewMessage('');
     }
 
@@ -37,16 +37,20 @@ const Chat: React.FC<IChatProps> = ({ route }: IChatProps) => {
     const renderItem = ({ item }: { item: IMessage }) => {
         return (
             <View className='flex-1 bg-white mb-4'>
-                <View className='flex-row justify-between my-2'>
-                    <Text className='text-gray-500 text-xs mx-auto'>{new Date(item.createdAt.seconds * 1000).toLocaleString([], {
-                        year: 'numeric',
-                        month: 'numeric',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                    })}
-                    </Text>
-                </View>
+                {item.displayDate === true &&
+                    <View className='flex-row justify-between my-2'>
+
+                        <Text className='text-gray-500 text-xs mx-auto'>{new Date(item.createdAt.seconds * 1000).toLocaleString([], {
+                            year: 'numeric',
+                            month: 'numeric',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        })}
+                        </Text>
+
+                    </View>
+                }
                 <View className={`{flex-row justify-between ${item.userId === session?.id ? 'ml-auto' : 'mr-auto'}`}>
                     <View className={`p-3 rounded-xl ${item.userId === session?.id ? 'bg-blue-500' : 'bg-gray-200'}`}>
                         <Text className={`${item.userId === session?.id ? 'text-white' : 'text-gray-900'}`}>{item.message}</Text>
