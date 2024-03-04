@@ -1,7 +1,7 @@
 import React from "react";
 import { IUser } from "../types/IUser";
 
-import { FIREBASE_AUTH, FIREBASE_DB } from "../../config";
+import { FIREBASE_AUTH, FIREBASE_DB, dbCollections } from "../../config";
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, UserCredential, onAuthStateChanged } from "firebase/auth";
 import { DocumentData, DocumentReference, doc, getDoc, setDoc } from "firebase/firestore";
 
@@ -44,7 +44,7 @@ export const SessionProvider: React.FC<ISessionProps> = ({ children }: ISessionP
         try {
             await signInWithEmailAndPassword(FIREBASE_AUTH, data.email, data.password)
                 .then(async (userCredential: UserCredential) => {
-                    const data = await getDoc(doc(FIREBASE_DB, 'users', userCredential.user.uid) as DocumentReference<DocumentData, DocumentData>)
+                    const data = await getDoc(doc(FIREBASE_DB, dbCollections._USER_COLLECTION, userCredential.user.uid) as DocumentReference<DocumentData, DocumentData>)
                     if (data.exists()) {
                         setSession({
                             id: userCredential.user.uid,
@@ -66,7 +66,7 @@ export const SessionProvider: React.FC<ISessionProps> = ({ children }: ISessionP
         try {
             await createUserWithEmailAndPassword(FIREBASE_AUTH, data.email, data.password)
                 .then((userCredential: UserCredential) => {
-                    setDoc(doc(FIREBASE_DB, 'users', userCredential.user.uid) as DocumentReference<DocumentData, DocumentData>, {
+                    setDoc(doc(FIREBASE_DB, dbCollections._USER_COLLECTION, userCredential.user.uid) as DocumentReference<DocumentData, DocumentData>, {
                         email: userCredential.user.email,
                         uid: userCredential.user.uid,
                         isSearching: false

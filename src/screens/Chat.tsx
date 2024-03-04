@@ -1,22 +1,10 @@
 import React from 'react'
-import {
-    collection,
-    query,
-    orderBy,
-    addDoc,
-    onSnapshot,
-    Timestamp,
-    doc,
-    getDoc,
-    getDocs,
-} from 'firebase/firestore'
-//import { GiftedChat } from 'react-native-gifted-chat'
-import { FIREBASE_AUTH, FIREBASE_DB } from '../../config';
 import { FlatList, TextInput, TouchableOpacity, View, Text, KeyboardAvoidingView, Platform } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSession } from '../contexts/Session';
 import { useApp } from '../contexts/App';
 import { IMessage } from '../types/IMessage';
+import { useData } from '../contexts/Data';
 
 interface IChatProps {
     route: {
@@ -32,72 +20,18 @@ const Chat: React.FC<IChatProps> = ({ route }: IChatProps) => {
     const { uid, messages } = route.params;
     const { session } = useSession();
     const { generateUId } = useApp();
+    const { sendData, listenData } = useData();
 
     const [messagesView, setMessagesView] = React.useState<IMessage[]>([]);
     const [newMessage, setNewMessage] = React.useState<string>('');
 
-    // useLayoutEffect(() => {
-    //     const collectionRef = collection(FIREBASE_DB, 'messages');
-    //     const q = query(collectionRef, orderBy('createdAt', 'desc'));
-
-    //     const unsubscribe = onSnapshot(q, (snapshot) => {
-    //         const messages = snapshot.docs.map((doc) => {
-    //             return {
-    //                 _id: doc.id,
-    //                 text: doc.data().text,
-    //                 createdAt: doc.data().createdAt.toDate(),
-    //                 user: doc.data().user
-    //             }
-    //         });
-    //         setMessages(messages);
-    //     });
-
-    //     return () => unsubscribe();
-    // }, []);
-
-    const getData = async () => {
-        try {
-            if (!session) {
-                return;
-            } else {
-                const chatRef = doc(FIREBASE_DB, 'chats', uid);
-                const chatSnapshot = await getDoc(chatRef);
-                const messagesRef = collection(chatSnapshot.ref, 'messages');
-                const messagesSnapshot = await getDocs(messagesRef);
-                const messagesData = messagesSnapshot.docs.map((messageDoc) => {
-                    const messageData = messageDoc.data() as IMessage;
-                    messageData.uid = messageDoc.id;
-                    return messageData;
-                });
-                messagesData.sort((a, b) => b.createdAt.seconds - a.createdAt.seconds);
-                setMessagesView(messagesData);
-            }
-        } catch (error) {
-            console.log(error);
-        }
-    }
-
-
     const onSend = () => {
-        if (newMessage.trim() === '') {
-            return;
-        }
-
-        const newMessageObj: IMessage = {
-            message: newMessage,
-            createdAt: Timestamp.now(),
-            userId: session!.id
-        };
-
-        addDoc(collection(FIREBASE_DB, 'chats', uid, 'messages'), newMessageObj);
-        setMessagesView(prevMessages => [newMessageObj, ...prevMessages]);
-        console.log(messagesView)
+        sendData(uid, newMessage);
         setNewMessage('');
     }
 
     React.useEffect(() => {
-        setMessagesView(messages)
-        getData()
+        return listenData(uid, messages, setMessagesView)
     }, [])
 
     const renderItem = ({ item }: { item: IMessage }) => {

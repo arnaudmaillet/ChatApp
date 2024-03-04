@@ -1,11 +1,8 @@
 import { View, Text, FlatList, TouchableOpacity } from 'react-native'
 import React, { useEffect } from 'react'
-import { DocumentData, DocumentReference, DocumentSnapshot, collection, doc, getDoc, getDocs, query, where } from 'firebase/firestore'
-import { FIREBASE_DB } from '../../config'
-import { useSession } from '../contexts/Session'
 import { useNavigation } from '@react-navigation/native'
 import { IChat } from '../types/IChat'
-import { IMessage } from '../types/IMessage'
+import { useData } from '../contexts/Data'
 
 interface INavigation {
     navigate: (name: string, params: any) => void
@@ -13,39 +10,8 @@ interface INavigation {
 
 const Home = () => {
 
-    const { session } = useSession();
     const navigation = useNavigation<INavigation>()
-
-    const [data, setData] = React.useState<IChat[]>([])
-
-    const getData = async () => {
-        if (!session) {
-            return;
-        } else {
-            const userRef = doc(FIREBASE_DB, 'users', session!.id) as DocumentReference<DocumentData, DocumentData>;
-            const userSnapshot = await getDoc(userRef);
-            const response = query(collection(FIREBASE_DB, 'chats'), where('users', 'array-contains', userSnapshot.ref));
-            const chatSnapshot = await getDocs(response);
-            const chatsData: IChat[] = [];
-
-            await Promise.all(chatSnapshot.docs.map(async (chatDoc) => {
-                const chatData = chatDoc.data() as IChat;
-                const messagesRef = collection(chatDoc.ref, 'messages');
-                const messagesSnapshot = await getDocs(messagesRef);
-                const messagesData = messagesSnapshot.docs.map((messageDoc) => {
-                    const messageData = messageDoc.data() as IMessage
-                    messageData.uid = messageDoc.id;
-                    return messageData;
-                });
-                messagesData.sort((a, b) => b.createdAt.seconds - a.createdAt.seconds);
-                chatData.uid = chatDoc.id;
-                chatData.messages = messagesData;
-                chatsData.push(chatData);
-            }));
-
-            setData(chatsData);
-        }
-    };
+    const { data, getData } = useData()
 
     useEffect(() => {
         getData()
