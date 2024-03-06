@@ -1,10 +1,10 @@
 import React from "react";
-import { IChat } from "../types/IChat";
+import { DefaultChat, IChat } from "../types/IChat";
 import { useSession } from "./Session";
 import { DocumentData, DocumentReference, Timestamp, Unsubscribe, addDoc, collection, doc, getDoc, getDocs, onSnapshot, query, where } from "firebase/firestore";
 import { FIREBASE_DB, dbCollections } from "../../config";
 import { IMessage } from "../types/IMessage";
-import { get } from "react-native/Libraries/TurboModule/TurboModuleRegistry";
+import { IUser } from "../types/IUser";
 
 enum DataSort {
     ASC = 'asc',
@@ -24,9 +24,9 @@ interface IDataProps {
     children: React.ReactNode;
 };
 
-export const DataContext = React.createContext<IDataContext | null>(null);
+const DataContext = React.createContext<IDataContext | null>(null);
 
-export const DataProvider: React.FC<IDataProps> = ({ children }: IDataProps) => {
+const DataProvider: React.FC<IDataProps> = ({ children }: IDataProps) => {
 
     const { session } = useSession();
     const [data, setData] = React.useState<IChat[]>([])
@@ -49,8 +49,8 @@ export const DataProvider: React.FC<IDataProps> = ({ children }: IDataProps) => 
             addDoc(collection(FIREBASE_DB, dbCollections._CHAT_COLLECTION, chatUid, dbCollections._MESSAGE_COLLECTION), {
                 message: message,
                 createdAt: Timestamp.now(),
-                userId: session!.id,
-                displayDate: messages[0].createdAt.seconds > Timestamp.now().seconds * 1000 - (60 * 30)
+                userId: session!.uid,
+                displayDate: messages[0].createdAt.seconds * 1000 > Timestamp.now().seconds * 1000 - (60 * 30)
             } as IMessage);
         }
     }
@@ -76,14 +76,14 @@ export const DataProvider: React.FC<IDataProps> = ({ children }: IDataProps) => 
         if (session === null) {
             return;
         } else {
-            const userRef = doc(FIREBASE_DB, dbCollections._USER_COLLECTION, session!.id) as DocumentReference<DocumentData, DocumentData>;
-            const userSnapshot = await getDoc(userRef);
+            const userSnapshot = await getDoc(doc(FIREBASE_DB, dbCollections._USER_COLLECTION, session!.uid) as DocumentReference<DocumentData, DocumentData>);
             const response = query(collection(FIREBASE_DB, dbCollections._CHAT_COLLECTION), where(dbCollections._USER_COLLECTION, 'array-contains', userSnapshot.ref));
             const chatSnapshot = await getDocs(response);
             const chatsData: IChat[] = [];
 
             await Promise.all(chatSnapshot.docs.map(async (chatDoc) => {
-                const chatData = chatDoc.data() as IChat;
+                const chatDocs = chatDoc.data()
+
                 const messagesRef = collection(chatDoc.ref, dbCollections._MESSAGE_COLLECTION);
                 const messagesSnapshot = await getDocs(messagesRef);
                 const messagesData = messagesSnapshot.docs.map((messageDoc) => {
@@ -92,15 +92,26 @@ export const DataProvider: React.FC<IDataProps> = ({ children }: IDataProps) => 
                     messageData.displayDate = false;
                     return messageData;
                 });
+
+                const usersDocs = chatDocs.users as DocumentReference<DocumentData, DocumentData>[];
+                const chatData: IChat = { ...DefaultChat };
+
+                await Promise.all(usersDocs.map(async (userRef) => {
+                    const userSnapshot = await getDoc(userRef);
+                    const userData = userSnapshot.data() as IUser;
+                    userData.uid = userSnapshot.id;
+                    chatData.users.push(userData);
+                }));
+
                 sortData(messagesData, DataSort.DESC);
-                chatData.uid = chatDoc.id;
+                chatData.uid = chatDoc.id as string;
                 chatData.messages = messagesData;
                 chatsData.push(chatData);
             }));
+
             setData(chatsData);
         }
     }
-
 
     const updateData = (chat: IChat) => {
         const index = data.findIndex((c) => c.uid === chat.uid);
@@ -111,11 +122,10 @@ export const DataProvider: React.FC<IDataProps> = ({ children }: IDataProps) => 
     }
 
     const addData = () => {
-        const newChat: IChat = {
+        addDoc(collection(FIREBASE_DB, dbCollections._CHAT_COLLECTION), {
             messages: [],
-            users: [doc(FIREBASE_DB, dbCollections._USER_COLLECTION, session!.id) as DocumentReference<DocumentData, DocumentData>]
-        }
-        addDoc(collection(FIREBASE_DB, dbCollections._CHAT_COLLECTION), newChat)
+            users: [doc(FIREBASE_DB, dbCollections._USER_COLLECTION, session!.uid) as DocumentReference<DocumentData, DocumentData>]
+        })
         getData();
     }
 
@@ -126,10 +136,12 @@ export const DataProvider: React.FC<IDataProps> = ({ children }: IDataProps) => 
     )
 }
 
-export const useData = (): IDataContext => {
+const useData = (): IDataContext => {
     const context = React.useContext(DataContext);
     if (!context) {
         throw new Error('useData must be used within a DataProvider');
     }
     return context;
 }
+
+export { DataProvider, DataContext, useData }

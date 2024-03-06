@@ -5,7 +5,7 @@ import TextInputApp from "../components/TextInputApp/TextInputApp";
 import TouchableOpacityApp from "../components/TouchableOpacityApp/TouchableOpacityApp";
 import { IDataAuth, useSession } from "../contexts/Session";
 
-const Login = () => {
+const Login: React.FC = () => {
     const { signIn, signUp, isLoading } = useSession();
     const [dataAuth, setDataAuth] = React.useState<IDataAuth>({ email: '', password: '' });
 

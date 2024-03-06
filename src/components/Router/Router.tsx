@@ -7,18 +7,19 @@ import { useSession } from '../../contexts/Session';
 import Chat from '../../screens/Chat';
 import Login from '../../screens/Login';
 import Home from '../../screens/Home';
+import { TRouteStackParamList } from '../../types/INavigation';
 
-const Stack = createNativeStackNavigator();
+const Stack = createNativeStackNavigator<TRouteStackParamList>();
 
-export default function Router() {
+const Router: React.FC = () => {
     const { session, signOut } = useSession();
     return (
         <NavigationContainer>
-            <Stack.Navigator initialRouteName="AppLoading">
-                {session?.id ? (
+            <Stack.Navigator>
+                {session?.uid ? (
                     <>
                         <Stack.Screen
-                            name="我们爱你"
+                            name="Home"
                             component={Home}
                             options={{
                                 headerRight: () => (
@@ -46,3 +47,5 @@ export default function Router() {
         </NavigationContainer>
     );
 }
+
+export default Router;

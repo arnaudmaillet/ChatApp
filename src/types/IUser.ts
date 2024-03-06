@@ -1,6 +1,6 @@
 export interface IUser {
-    id: string;
-    name: string | null;
+    uid: string;
+    name?: string | null;
     email: string | null;
     isSearching: boolean;
 }

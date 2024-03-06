@@ -47,7 +47,7 @@ export const SessionProvider: React.FC<ISessionProps> = ({ children }: ISessionP
                     const data = await getDoc(doc(FIREBASE_DB, dbCollections._USER_COLLECTION, userCredential.user.uid) as DocumentReference<DocumentData, DocumentData>)
                     if (data.exists()) {
                         setSession({
-                            id: userCredential.user.uid,
+                            uid: userCredential.user.uid,
                             email: data.data().email,
                             isSearching: data.data().isSearching
                         } as IUser);
@@ -57,6 +57,7 @@ export const SessionProvider: React.FC<ISessionProps> = ({ children }: ISessionP
             console.log(error);
             alert("Sign in failed : " + error.message);
         } finally {
+            console.log("Sign in successful", session);
             setIsLoading(false);
         }
     }
@@ -72,7 +73,7 @@ export const SessionProvider: React.FC<ISessionProps> = ({ children }: ISessionP
                         isSearching: false
                     }).then(() => {
                         setSession({
-                            id: userCredential.user.uid,
+                            uid: userCredential.user.uid,
                             email: userCredential.user.email,
                             isSearching: false
                         } as IUser);

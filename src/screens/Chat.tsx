@@ -5,17 +5,14 @@ import { useSession } from '../contexts/Session';
 import { useApp } from '../contexts/App';
 import { IMessage } from '../types/IMessage';
 import { useData } from '../contexts/Data';
+import { TChatNavigationProp } from '../types/INavigation';
+
 
 interface IChatProps {
-    route: {
-        params: {
-            uid: string,
-            messages: IMessage[]
-        }
-    }
+    route: TChatNavigationProp;
 }
 
-const Chat: React.FC<IChatProps> = ({ route }: IChatProps) => {
+const Chat: React.FC<IChatProps> = ({ route }) => {
 
     const { uid, messages } = route.params;
     const { session } = useSession();
@@ -26,12 +23,12 @@ const Chat: React.FC<IChatProps> = ({ route }: IChatProps) => {
     const [newMessage, setNewMessage] = React.useState<string>('');
 
     const onSend = () => {
-        sendData(uid, newMessage, messagesView);
+        sendData(uid!, newMessage, messagesView);
         setNewMessage('');
     }
 
     React.useEffect(() => {
-        return listenData(uid, messages, setMessagesView)
+        return listenData(uid!, messages, setMessagesView)
     }, [])
 
     const renderItem = ({ item }: { item: IMessage }) => {
@@ -51,9 +48,9 @@ const Chat: React.FC<IChatProps> = ({ route }: IChatProps) => {
 
                     </View>
                 }
-                <View className={`{flex-row justify-between ${item.userId === session?.id ? 'ml-auto' : 'mr-auto'}`}>
-                    <View className={`p-3 rounded-xl ${item.userId === session?.id ? 'bg-blue-500' : 'bg-gray-200'}`}>
-                        <Text className={`${item.userId === session?.id ? 'text-white' : 'text-gray-900'}`}>{item.message}</Text>
+                <View className={`{flex-row justify-between ${item.userId === session!.uid ? 'ml-auto' : 'mr-auto'}`}>
+                    <View className={`p-3 rounded-xl ${item.userId === session!.uid ? 'bg-blue-500' : 'bg-gray-200'}`}>
+                        <Text className={`${item.userId === session!.uid ? 'text-white' : 'text-gray-900'}`}>{item.message}</Text>
                     </View>
                 </View>
             </View>
