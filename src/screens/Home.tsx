@@ -20,6 +20,7 @@ const Home: React.FC<IHomeProps> = ({ navigation }) => {
         return (
             <TouchableOpacity
                 className='my-2'
+                disabled={item.users?.length < 2}
                 onPress={() => navigation.navigate('Chat', item)}>
                 <View className='p-4 border border-gray-200 rounded-lg flex-row justify-between'>
                     <View className='my-auto'>

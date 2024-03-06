@@ -15,9 +15,9 @@ interface IDataContext {
     data: IChat[];
     getData: () => Promise<void>;
     updateData: (chat: IChat) => void;
-    sendData: (chatUid: string, message: string, messages: IMessage[]) => void;
+    sendData: (chat: IChat, message: string, messages: IMessage[]) => void;
     addData: () => void;
-    listenData: (chatUid: string, messages: IMessage[], setView: React.Dispatch<React.SetStateAction<IMessage[]>>) => Unsubscribe;
+    listenData: (chat: IChat, setView: React.Dispatch<React.SetStateAction<IMessage[]>>) => Unsubscribe;
 }
 
 interface IDataProps {
@@ -41,32 +41,32 @@ const DataProvider: React.FC<IDataProps> = ({ children }: IDataProps) => {
         });
     }
 
-    const sendData = (chatUid: string, message: string, messages: IMessage[]) => {
+    const sendData = (chat: IChat, message: string, messages: IMessage[]) => {
         if (message.trim() === '') {
             return;
         } else {
             sortData(messages, DataSort.DESC);
-            addDoc(collection(FIREBASE_DB, dbCollections._CHAT_COLLECTION, chatUid, dbCollections._MESSAGE_COLLECTION), {
+            addDoc(collection(FIREBASE_DB, dbCollections._CHAT_COLLECTION, chat.uid!, dbCollections._MESSAGE_COLLECTION), {
                 message: message,
                 createdAt: Timestamp.now(),
                 userId: session!.uid,
-                displayDate: messages[0].createdAt.seconds * 1000 > Timestamp.now().seconds * 1000 - (60 * 30)
+                displayDate: messages[0] ? messages[0].createdAt.seconds * 1000 > Timestamp.now().seconds * 1000 - (60 * 30) : true
             } as IMessage);
         }
     }
 
-    const listenData = (chatUid: string, messages: IMessage[], setView: React.Dispatch<React.SetStateAction<IMessage[]>>): Unsubscribe => {
-        const chatRef = doc(FIREBASE_DB, dbCollections._CHAT_COLLECTION, chatUid);
+    const listenData = (chat: IChat, setView: React.Dispatch<React.SetStateAction<IMessage[]>>): Unsubscribe => {
+        const chatRef = doc(FIREBASE_DB, dbCollections._CHAT_COLLECTION, chat.uid!);
         const messagesRef = collection(chatRef, dbCollections._MESSAGE_COLLECTION);
 
-        setView(messages);
+        setView(chat.messages);
         const unsubscribe = onSnapshot(messagesRef, (snapshot) => {
             const updatedMessages: IMessage[] = snapshot.docs.map((doc) => {
                 const messageData = doc.data() as IMessage;
                 messageData.uid = doc.id;
                 return messageData;
             });
-            updateData({ uid: chatUid, messages: updatedMessages } as IChat);
+            updateData({ ...chat, messages: updatedMessages });
             setView(updatedMessages);
         });
         return () => unsubscribe()
@@ -82,6 +82,7 @@ const DataProvider: React.FC<IDataProps> = ({ children }: IDataProps) => {
             const chatsData: IChat[] = [];
 
             await Promise.all(chatSnapshot.docs.map(async (chatDoc) => {
+                let i = 0;
                 const chatDocs = chatDoc.data()
 
                 const messagesRef = collection(chatDoc.ref, dbCollections._MESSAGE_COLLECTION);
@@ -95,19 +96,23 @@ const DataProvider: React.FC<IDataProps> = ({ children }: IDataProps) => {
 
                 const usersDocs = chatDocs.users as DocumentReference<DocumentData, DocumentData>[];
                 const chatData: IChat = { ...DefaultChat };
+                const usersData: IUser[] = [];
 
                 await Promise.all(usersDocs.map(async (userRef) => {
                     const userSnapshot = await getDoc(userRef);
                     const userData = userSnapshot.data() as IUser;
                     userData.uid = userSnapshot.id;
-                    chatData.users.push(userData);
+                    usersData.push(userData);
+                    i++;
                 }));
 
                 sortData(messagesData, DataSort.DESC);
                 chatData.uid = chatDoc.id as string;
                 chatData.messages = messagesData;
+                chatData.users = usersData;
                 chatsData.push(chatData);
             }));
+
 
             setData(chatsData);
         }
@@ -122,11 +127,11 @@ const DataProvider: React.FC<IDataProps> = ({ children }: IDataProps) => {
     }
 
     const addData = () => {
-        addDoc(collection(FIREBASE_DB, dbCollections._CHAT_COLLECTION), {
-            messages: [],
-            users: [doc(FIREBASE_DB, dbCollections._USER_COLLECTION, session!.uid) as DocumentReference<DocumentData, DocumentData>]
-        })
-        getData();
+        // addDoc(collection(FIREBASE_DB, dbCollections._CHAT_COLLECTION), {
+        //     messages: [],
+        //     users: [doc(FIREBASE_DB, dbCollections._USER_COLLECTION, session!.uid) as DocumentReference<DocumentData, DocumentData>]
+        // })
+        // getData();
     }
 
     return (

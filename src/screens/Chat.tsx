@@ -14,7 +14,7 @@ interface IChatProps {
 
 const Chat: React.FC<IChatProps> = ({ route }) => {
 
-    const { uid, messages } = route.params;
+    const self = route.params;
     const { session } = useSession();
     const { generateUId } = useApp();
     const { sendData, listenData } = useData();
@@ -23,12 +23,12 @@ const Chat: React.FC<IChatProps> = ({ route }) => {
     const [newMessage, setNewMessage] = React.useState<string>('');
 
     const onSend = () => {
-        sendData(uid!, newMessage, messagesView);
+        sendData(self, newMessage, messagesView);
         setNewMessage('');
     }
 
     React.useEffect(() => {
-        return listenData(uid!, messages, setMessagesView)
+        return listenData(self, setMessagesView)
     }, [])
 
     const renderItem = ({ item }: { item: IMessage }) => {
