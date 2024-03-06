@@ -1,7 +1,7 @@
 import React from "react";
 import { DefaultChat, IChat } from "../types/IChat";
 import { useSession } from "./Session";
-import { DocumentData, DocumentReference, Timestamp, Unsubscribe, addDoc, collection, doc, getDoc, getDocs, onSnapshot, query, where } from "firebase/firestore";
+import { DocumentData, DocumentReference, Timestamp, Unsubscribe, addDoc, collection, doc, getDoc, getDocs, onSnapshot, query, updateDoc, where } from "firebase/firestore";
 import { FIREBASE_DB, dbCollections } from "../../config";
 import { IMessage } from "../types/IMessage";
 import { IUser } from "../types/IUser";
@@ -12,11 +12,10 @@ enum DataSort {
 }
 
 interface IDataContext {
-    data: IChat[];
+    localData: IChat[];
     getData: () => Promise<void>;
-    updateData: (chat: IChat) => void;
     sendData: (chat: IChat, message: string, messages: IMessage[]) => void;
-    addData: () => void;
+    updateData(user: IUser): Promise<void>;
     listenData: (chat: IChat, setView: React.Dispatch<React.SetStateAction<IMessage[]>>) => Unsubscribe;
 }
 
@@ -29,7 +28,7 @@ const DataContext = React.createContext<IDataContext | null>(null);
 const DataProvider: React.FC<IDataProps> = ({ children }: IDataProps) => {
 
     const { session } = useSession();
-    const [data, setData] = React.useState<IChat[]>([])
+    const [localData, setLocalData] = React.useState<IChat[]>([])
 
     const sortData = (data: IMessage[], sort: DataSort) => {
         return data.sort((a, b) => {
@@ -66,7 +65,7 @@ const DataProvider: React.FC<IDataProps> = ({ children }: IDataProps) => {
                 messageData.uid = doc.id;
                 return messageData;
             });
-            updateData({ ...chat, messages: updatedMessages });
+            updateLocalData({ ...chat, messages: updatedMessages });
             setView(updatedMessages);
         });
         return () => unsubscribe()
@@ -114,28 +113,27 @@ const DataProvider: React.FC<IDataProps> = ({ children }: IDataProps) => {
             }));
 
 
-            setData(chatsData);
+            setLocalData(chatsData);
         }
     }
 
-    const updateData = (chat: IChat) => {
-        const index = data.findIndex((c) => c.uid === chat.uid);
-        const newData = [...data];
+    const updateLocalData = (chat: IChat) => {
+        const index = localData.findIndex((c) => c.uid === chat.uid);
+        const newData = [...localData];
         newData[index] = chat;
         sortData(newData[index].messages, DataSort.DESC);
-        setData(newData);
+        setLocalData(newData);
     }
 
-    const addData = () => {
-        // addDoc(collection(FIREBASE_DB, dbCollections._CHAT_COLLECTION), {
-        //     messages: [],
-        //     users: [doc(FIREBASE_DB, dbCollections._USER_COLLECTION, session!.uid) as DocumentReference<DocumentData, DocumentData>]
-        // })
-        // getData();
+    const updateData = async (user: IUser) => {
+        await updateDoc(doc(FIREBASE_DB, dbCollections._USER_COLLECTION, user.uid!), {
+            email: user.email,
+            isSearching: user.isSearching
+        });
     }
 
     return (
-        <DataContext.Provider value={{ data, getData, updateData, sendData, addData, listenData }}>
+        <DataContext.Provider value={{ localData, getData, sendData, updateData, listenData }}>
             {children}
         </DataContext.Provider>
     )
