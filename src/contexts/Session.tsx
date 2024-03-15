@@ -12,6 +12,7 @@ export interface IDataAuth {
 
 interface ISessionContext {
     session: IUser | null;
+    setSession: React.Dispatch<React.SetStateAction<IUser | null>>;
     isLoading: boolean;
     signUp: (data: IDataAuth) => Promise<void>;
     signIn: (data: IDataAuth) => Promise<void>;
@@ -80,7 +81,6 @@ export const SessionProvider: React.FC<ISessionProps> = ({ children }: ISessionP
                     });
                 });
             console.log("Sign up successful", session);
-            alert("Sign up successful");
         } catch (error: any) {
             console.log(error);
             alert("Sign in failed : " + error.message);
@@ -95,7 +95,7 @@ export const SessionProvider: React.FC<ISessionProps> = ({ children }: ISessionP
 
     if (!children) return null;
     return (
-        <SessionContext.Provider value={{ session, isLoading, signUp, signIn, signOut }}>
+        <SessionContext.Provider value={{ session, setSession, isLoading, signUp, signIn, signOut }}>
             {children}
         </SessionContext.Provider>
     );
