@@ -15,7 +15,7 @@ const Message: React.FC<IMessageProps> = ({ item, index }) => {
     const { session } = useSession();
     return (
         <View style={styles.container}>
-            {item.displayDate === true &&
+            {item.displayDate &&
                 <Animated.View
                     style={styles.dateContainer}
                     entering={FadeIn.delay(20 * index).duration(1000)}
@@ -51,7 +51,6 @@ const styles = StyleSheet.create({
     dateContainer: {
         flex: 1,
         alignItems: 'center',
-        marginTop: 10
     },
     date: {
         color: 'gray',

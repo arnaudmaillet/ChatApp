@@ -1,20 +1,18 @@
-import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, StyleSheet, ScrollView } from 'react-native'
+import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, StyleSheet, ScrollView, SafeAreaView } from 'react-native'
 import React, { useEffect } from 'react'
-import { IChat } from '../types/IChat'
-import { useData } from '../contexts/Data'
-import { THomeNavigationProp } from '../types/INavigation'
-import { useSession } from '../contexts/Session'
-import { Entypo } from '@expo/vector-icons';
-import NavBar from '../components/NavBar'
-import { _COLORS } from '../misc/colors'
+import { IChat } from '../../types/IChat'
+import { useData } from '../../contexts/Data'
+import { TChatsNavigationProp } from '../../types/INavigation'
+import { useSession } from '../../contexts/Session'
+import { _COLORS } from '../../misc/colors'
 
-interface IHomeProps {
-    navigation: THomeNavigationProp
+export interface IChatsProps {
+    navigation: TChatsNavigationProp
 }
 
-const Home: React.FC<IHomeProps> = ({ navigation }) => {
+const Chats: React.FC<IChatsProps> = ({ navigation }) => {
 
-    const { localData, getData, findChat } = useData()
+    const { localData, getData } = useData()
     const { session } = useSession()
 
     useEffect(() => {
@@ -73,7 +71,7 @@ const Home: React.FC<IHomeProps> = ({ navigation }) => {
     }
 
     return (
-        <View style={styles.container}>
+        <SafeAreaView style={styles.container}>
             <FlatList
                 style={styles.listContainer}
                 ListHeaderComponent={headerList}
@@ -82,8 +80,7 @@ const Home: React.FC<IHomeProps> = ({ navigation }) => {
                 keyExtractor={item => item.uid!}
                 refreshing={false}
             />
-            <NavBar />
-        </View>
+        </SafeAreaView>
     );
 }
 
@@ -142,4 +139,4 @@ const styles = StyleSheet.create({
 });
 
 
-export default Home
+export default Chats

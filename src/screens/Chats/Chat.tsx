@@ -1,16 +1,15 @@
 import React from 'react';
 import { FlatList, TextInput, TouchableOpacity, View, KeyboardAvoidingView, Platform, StyleSheet } from 'react-native';
-import Animated, { useSharedValue, useAnimatedStyle, interpolate, FadeInDown, PinwheelIn, SlideInDown, BounceInRight, ZoomIn, ZoomInRight, SlideInRight } from 'react-native-reanimated';
+import Animated, { SlideInDown, ZoomIn, SlideInRight } from 'react-native-reanimated';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useSession } from '../contexts/Session';
-import { useData } from '../contexts/Data';
-import { IMessage } from '../types/IMessage';
-import { TChatNavigationProp } from '../types/INavigation';
-import Message from '../components/Message';
-import { _COLORS } from '../misc/colors';
+import { useData } from '../../contexts/Data';
+import { IMessage } from '../../types/IMessage';
+import { TChatNavigationProp } from '../../types/INavigation';
+import Message from '../../components/Message';
+import { _COLORS } from '../../misc/colors';
 import { Foundation } from '@expo/vector-icons';
 
-interface IChatProps {
+export interface IChatProps {
     route: TChatNavigationProp;
 }
 
@@ -22,15 +21,9 @@ const Chat: React.FC<IChatProps> = ({ route }) => {
     const [messagesView, setMessagesView] = React.useState<IMessage[]>([]);
     const [newMessage, setNewMessage] = React.useState<string>('');
 
-    const opacity = useSharedValue(0);
-
     React.useEffect(() => {
         return listenData(self, setMessagesView)
     }, [])
-
-    React.useEffect(() => {
-        opacity.value = interpolate(messagesView.length, [0, messagesView.length], [0, 1]);
-    }, [messagesView]);
 
     const onSend = () => {
         sendData(self, newMessage, messagesView);
@@ -50,7 +43,7 @@ const Chat: React.FC<IChatProps> = ({ route }) => {
         >
             <FlatList
                 style={styles.flatList}
-                data={messagesView}
+                data={messagesView.length > 0 ? messagesView : []}
                 renderItem={renderItem}
                 keyExtractor={item => item.uid!}
                 inverted
@@ -73,7 +66,9 @@ const Chat: React.FC<IChatProps> = ({ route }) => {
                         {newMessage.length === 0 ?
                             <Foundation name="microphone" size={35} color={_COLORS._BORDER} />
                             :
-                            <MaterialCommunityIcons name="send-circle" size={40} color='#FF6600' />
+                            <Animated.View entering={ZoomIn.springify()}>
+                                <MaterialCommunityIcons name="send-circle" size={40} color='#FF6600' />
+                            </Animated.View>
                         }
                     </TouchableOpacity>
                 </Animated.View>

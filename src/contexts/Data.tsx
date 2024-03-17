@@ -111,8 +111,6 @@ const DataProvider: React.FC<IDataProps> = ({ children }: IDataProps) => {
                 chatData.users = usersData;
                 chatsData.push(chatData);
             }));
-
-
             setLocalData(chatsData);
         }
     }
